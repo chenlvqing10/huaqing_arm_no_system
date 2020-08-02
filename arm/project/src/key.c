@@ -1,0 +1,93 @@
+#include "key.h"
+void hal_gpio_interrupt_init(void)
+{
+	/*-----key +*/
+	// 1. 设置GPIOB8引脚为GPIO功能 GPIOBALTFN0
+	GPIOB.ALTFN0 &= (~(0x3 << 16));
+	// 2. 设置GPIOB8引脚为输入功能 GPIOBOUTENB
+	GPIOB.OUTENB &= (~(0x1 << 8));
+	// 3. 设置GPIOB8引脚的中断触发方式：下降沿触发
+	// 		GPIOBDETMODE0  GPIOBDETMODEEX
+	GPIOB.DETMODE0 &= (~(0x3 << 16));
+	GPIOB.DETMODE0 |= (0x2 << 16);
+	GPIOB.DETMODEEX &= (~(0x1 << 8));
+	// 4. 设置GPIOB8引脚中断使能寄存器  GPIOBINTENB 
+	GPIOB.INTENB |= (0x1 << 8);
+	// 5. 设置GPIOB8引脚的检测使能寄存器  GPIOBDETENB
+	GPIOB.DETENB |= (0x1 << 8);
+
+	/*-----key -*/
+	// 1. 设置GPIOB16引脚为GPIO功能 GPIOBALTFN1
+	GPIOB.ALTFN1 &= (~(0x3 << 0));
+	GPIOB.ALTFN1 |= (0x2 << 0);
+	// 2. 设置GPIOB16引脚为输入功能 GPIOBOUTENB
+	GPIOB.OUTENB &= (~(0x1 << 16));
+	// 3. 设置GPIOB16引脚的中断触发方式：下降沿触发
+	// 		GPIOBDETMODE1  GPIOBDETMODEEX
+	GPIOB.DETMODE1 &= (~(0x3 << 0));
+	GPIOB.DETMODE1 |= (0x2 << 0);
+	GPIOB.DETMODEEX &= (~(0x1 << 16));
+	// 4. 设置GPIOB16引脚中断使能寄存器  GPIOBINTENB 
+	GPIOB.INTENB |= (0x1 << 16);
+	// 5. 设置GPIOB16引脚的检测使能寄存器  GPIOBDETENB
+	GPIOB.DETENB |= (0x1 << 16);
+}
+
+void hal_gic_init(void)
+{
+	// GPIOB中断源
+	// 1. 设置GICD层86号对应的中断使能寄存器 GICD_ISENABLER2[22]
+	GICD_ISENABLER.ISENABLER2 |= (0x1 << 22);
+	// 2. 设置中断优先级寄存器 GICD_IPRIORITYR21[23:16]
+	GICD_IPRIORITYR.IPRIORITYR21 &= (~(0xFF << 16));
+	GICD_IPRIORITYR.IPRIORITYR21 |= (86 << 16);
+	// 3. 设置中断目标分配寄存器 GICD_ITARGETSR21[23:16]
+	GICD_ITARGETSR.ITARGETSR21 &= (~(0xFF << 16));
+	GICD_ITARGETSR.ITARGETSR21 |= (0x1 << 16);
+
+	//ADC中断源 中断号:73
+	GICD_ISENABLER.ISENABLER2	 |= (0x1 << 9);//中断使能寄存器  GICD_ISENABLER2[9]
+	GICD_IPRIORITYR.IPRIORITYR18 &= (~(0xFF << 8));//中断优先级寄存器GICD_IPRIORITYR18[15:8]
+	GICD_IPRIORITYR.IPRIORITYR18 |= (73 << 8);
+	GICD_ITARGETSR.ITARGETSR18   &= (~(0xFF << 8));//设置中断目标分配寄存器 GICD_ITARGETSR18[15:8]
+	GICD_ITARGETSR.ITARGETSR18   |= (0x1 << 8);//cpu interface 0
+
+	//PWM2  中断号:61
+	// 1. 设置GICD层61号对应的中断使能寄存器 GICD_ISENABLER1[29]
+	GICD_ISENABLER.ISENABLER1 |= (0x1 << 29);
+	// 2. 设置中断优先级寄存器 GICD_IPRIORITYR14[15:8]
+	GICD_IPRIORITYR.IPRIORITYR14 &= (~(0xFF << 8));
+	GICD_IPRIORITYR.IPRIORITYR14 |= (61 << 8);
+	// 3. 设置中断目标分配寄存器 GICD_ITARGETSR14[15:8]
+	GICD_ITARGETSR.ITARGETSR14 &= (~(0xFF << 8));
+	GICD_ITARGETSR.ITARGETSR14 |= (0x1 << 8);
+
+
+	//PWM1 中断源 中断号:60
+	GICD_ISENABLER.ISENABLER1    |= (0x1 << 28);//中断使能寄存器  GICD_ISENABLER1[28]
+    GICD_IPRIORITYR.IPRIORITYR15 &= (~(0xFF <<0));//中断优先级寄存器GICD_IPRIORITYR15[7:0]
+    GICD_IPRIORITYR.IPRIORITYR15 |= (60 << 0);
+	GICD_ITARGETSR.ITARGETSR15   &= (~(0xFF <<0));//设置中断目标分配寄存器 GICD_ITARGETSR15[7:0]
+	GICD_ITARGETSR.ITARGETSR15   |= (0x1 << 0);
+	
+	//PWM0  中断号:59
+	// 1. 设置GICD层59号对应的中断使能寄存器 GICD_ISENABLER1[27]
+	GICD_ISENABLER.ISENABLER1 |= (0x1 << 27);
+	// 2. 设置中断优先级寄存器 GICD_IPRIORITYR14[31:24]
+	GICD_IPRIORITYR.IPRIORITYR14 &= (~(0xFF << 24));
+	GICD_IPRIORITYR.IPRIORITYR14 |= (59 << 24);
+	// 3. 设置中断目标分配寄存器 GICD_ITARGETSR14[31:24]
+	GICD_ITARGETSR.ITARGETSR14 &= (~(0xFF << 24));
+	GICD_ITARGETSR.ITARGETSR14 |= (0x1 << 24);
+	
+	// 4. 设置GICD层全局中断使能寄存器 GICD_CTRL[0]
+	GICD_CTRL |= (0x1);
+
+	// GICC
+	// 5. 设置GICC层中断全局使能寄存器 GICC_CTRL[0]
+	GICC_CTRL |= (0x1);
+	// 6. 设置GICC层中断屏蔽寄存器  GICC_PMR[7:0]
+	GICC_PMR |= (0xFF);//不屏蔽 优先级最低
+}
+
+
